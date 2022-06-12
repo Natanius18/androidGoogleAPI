@@ -3,14 +3,11 @@ package com.ccc.google_sheets_api;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ListAdapter;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
-import androidx.room.RoomDatabase;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -28,8 +25,8 @@ import java.util.HashMap;
 import java.util.concurrent.Executors;
 
 public class ListItem extends AppCompatActivity {
-    ListView listView;
-    ListAdapter adapter;
+    RecyclerView recyclerView;
+    RecyclerView.Adapter adapter;
     ProgressDialog loading;
 
     @Override
@@ -38,7 +35,7 @@ public class ListItem extends AppCompatActivity {
         setContentView(R.layout.list_item);
         setTitle("Каталог товаров");
 
-        listView = findViewById(R.id.lv_items);
+        recyclerView = findViewById(R.id.lv_items);
 
         getItems();
 
@@ -48,9 +45,9 @@ public class ListItem extends AppCompatActivity {
     private void getItems() {
         loading = ProgressDialog.show(this, "Загрузка", "Сканирую все товары", false, true);
 
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, "https://script.google.com/macros/s/AKfycbza7tfd-LRiYmsc4UZhmg9sWo3sJEzVIV_5XUzvMKg2CNPIWozDBzG6hKAmYHizcz4/exec?action=getItems",
-                this::parseItems, error -> {
-        }
+        StringRequest stringRequest = new StringRequest(Request.Method.GET,
+                "https://script.google.com/macros/s/AKfycbza7tfd-LRiYmsc4UZhmg9sWo3sJEzVIV_5XUzvMKg2CNPIWozDBzG6hKAmYHizcz4/exec?action=getItems",
+                this::parseItems, error -> {}
         );
 
         int socketTimeOut = 50000;
@@ -81,10 +78,9 @@ public class ListItem extends AppCompatActivity {
 
                 list.add(item);
 
-                ItemDB database = Room.databaseBuilder(getApplicationContext(), ItemDB.class, "weather")
+                ItemDB database = Room.databaseBuilder(getApplicationContext(), ItemDB.class, "store")
                         .fallbackToDestructiveMigration()
                         .build();
-
 
                 Executors.newSingleThreadExecutor().execute(() -> {
                     Item itemEntity = new Item();
@@ -99,10 +95,8 @@ public class ListItem extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        adapter = new SimpleAdapter(this, list, R.layout.list_item_row,
-                new String[]{"itemName", "brand", "price"}, new int[]{R.id.item_name, R.id.brand, R.id.price});
-
-        listView.setAdapter(adapter);
+        adapter = new MyAdapter(this, list);
+        recyclerView.setAdapter(adapter);
         loading.dismiss();
     }
 }
